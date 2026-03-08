@@ -67,28 +67,36 @@ export function makeEmployeeController(employeeService : EmployeeService) : Empl
             
         },
         updateEmployee : async (req : Request, res : Response) => {
-            if (!req.params.id){
-                res.status(400).send({message : 'Id required for this operation'})
-                return;
+            try {
+                if (!req.params.id){
+                    res.status(400).send({message : 'Id required for this operation'})
+                    return;
+                }
+                if (typeof req.params.id !== "string"){
+                    res.status(400).send({message: 'Only one id'})
+                    return;
+                }
+                const employeeData = updateEmployeeSchema.parse(req.body)
+                const updateEmployee = await employeeService.updateEmployee(parseInt(req.params.id), employeeData)
+                res.status(200).send({message: 'Employee updated successfully', employee: updateEmployee});
+            } catch (error) {
+                res.status(404).send({message: 'Employee not found'})
             }
-            if (typeof req.params.id !== "string"){
-                res.status(400).send({message: 'Only one id'})
-                return;
-            }
-            const employeeData = updateEmployeeSchema.parse(req.body)
-            const updateEmployee = await employeeService.updateEmployee(parseInt(req.params.id), employeeData)
-            res.status(200).send({message: 'Employee updated successfully', employee: updateEmployee});
         },
         deleteEmployee : async (req:Request, res:Response) => {
-            if(!req.params.id){
-                res.status(400).send({message : 'Id required for this operation'})
+            try {
+                if(!req.params.id){
+                    res.status(400).send({message : 'Id required for this operation'})
+                }
+                if (typeof req.params.id !== "string"){
+                    res.status(400).send({message: 'Only one id'})
+                    return;
+                }
+                await employeeService.deleteEmployee(parseInt(req.params.id));
+                res.status(200).send({message: 'Employee deleted successfully'})
+            } catch (error) {
+                res.status(404).send({message: 'Employee not found'})
             }
-            if (typeof req.params.id !== "string"){
-                res.status(400).send({message: 'Only one id'})
-                return;
-            }
-            await employeeService.deleteEmployee(parseInt(req.params.id));
-            res.status(200).send({message: 'Employee deleted successfully'})
         }
     }
 }

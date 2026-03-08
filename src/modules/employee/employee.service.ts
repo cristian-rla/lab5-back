@@ -21,10 +21,16 @@ export function makeEmployeeService(employeeRepo : EmployeeRepo){
             return await employeeRepo.createEmployee(employee);
         },
         updateEmployee: async (id: number, employeeUpdate : UpdateEmployeeDTO) => {
-            return await employeeRepo.updateEmployee(id, employeeUpdate);
+            const updatedEmployee = await employeeRepo.updateEmployee(id, employeeUpdate);
+            if(!updatedEmployee){
+                throw new Error('Employee not found');
+            }
+            return updatedEmployee;
         },
         deleteEmployee : async (id:number) => {
-            await employeeRepo.deleteEmployee(id);
+            if (await employeeRepo.deleteEmployee(id) == 0){
+                throw new Error('Employee not found');
+            }
         }
     }
 }
