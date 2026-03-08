@@ -2,10 +2,10 @@
   "name": "country-api-mysql",
   "version": "1.0.0",
   "description": "",
-  "main": "server.ts",
+  "main": "src/server.ts",
   "scripts": {
-    "start": "tsx server.ts",
-    "dev": "tsx server.ts"
+    "start": "tsx src/app/server.ts",
+    "dev": "tsx src/app/server.ts"
   },
   "type": "module",
   "keywords": [],
@@ -17,7 +17,8 @@
     "express": "^5.2.1",
     "mysql2": "^3.19.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

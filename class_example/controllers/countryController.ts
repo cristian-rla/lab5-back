@@ -15,7 +15,7 @@ export const getAllCountries = async (req: Request, res: Response) => {
 // Obtener un país por ID
 export const getCountryById = async (req: Request, res: Response) => {
     try {
-        const [rows, fields] = await pool.query<RowDataPacket[]>('SELECT * FROM country WHERE id = $1', [req.params.id]);
+        const [rows, fields] = await pool.query<RowDataPacket[]>('SELECT * FROM country WHERE id = ?', [req.params.id]);
         if (rows.length === 0) {
             return res.status(404).json({ error: 'País no encontrado' });
         }
@@ -34,10 +34,12 @@ export const createCountry = async (req: Request, res: Response) => {
     }
     try {
         const [rows, fields] = await pool.query<RowDataPacket[]>(
-            'INSERT INTO country (name, capital, currency) VALUES ($1, $2, $3) RETURNING *',
+            'INSERT INTO country (name, capital, currency) VALUES (?, ?, ?)',
             [name, capital, currency]
         );
-        res.status(201).json(rows[0]);
+        const insertedId = rows[0]?.insertId;
+        const [newCountryRows, newCountryFields] = await pool.query<RowDataPacket[]>('SELECT * FROM country WHERE id = ?', [insertedId]);
+        res.status(201).json(newCountryRows[0]);
     } catch (error) {
         console.error('Error al crear el país:', error);
         res.status(500).json({ error: 'Error al crear el país' });
@@ -53,13 +55,13 @@ export const updateCountry = async (req: Request, res: Response) => {
     }
     try {
         // Verificar si el país existe
-        const [checkRows, checkFields] = await pool.query<RowDataPacket[]>('SELECT * FROM country WHERE id = $1', [countryId]);
+        const [checkRows, checkFields] = await pool.query<RowDataPacket[]>('SELECT * FROM country WHERE id = ?', [countryId]);
         if (checkRows.length === 0) {
             return res.status(404).json({ error: 'País no encontrado' });
         }
         // Actualizar el país
         const [updateRows, updateFields] = await pool.query<RowDataPacket[]>(
-            'UPDATE country SET name = $1, capital = $2, currency = $3 WHERE id = $4 RETURNING *',
+            'UPDATE country SET name = ?, capital = ?, currency = ? WHERE id = ?',
             [name, capital, currency, countryId]
         );
         res.json(updateRows[0]);
@@ -73,12 +75,12 @@ export const deleteCountry = async (req: Request, res: Response) => {
     const countryId = req.params.id;
     try {
         // Verificar si el país existe
-        const [checkRows, checkFields] = await pool.query<RowDataPacket[]>('SELECT * FROM country WHERE id = $1', [countryId]);
+        const [checkRows, checkFields] = await pool.query<RowDataPacket[]>('SELECT * FROM country WHERE id = ?', [countryId]);
         if (checkRows.length === 0) {
             return res.status(404).json({ error: 'País no encontrado' });
         }
         // Eliminar el país
-        await pool.query('DELETE FROM country WHERE id = $1', [countryId]);
+        await pool.query('DELETE FROM country WHERE id = ?', [countryId]);
         res.json({ message: 'País eliminado con éxito' });
     } catch (error) {
         console.error('Error al eliminar el país:', error);
