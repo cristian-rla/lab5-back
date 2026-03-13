@@ -9,7 +9,7 @@ export type EmployeeRepo = {
     deleteEmployee : (id: number) => Promise<number>;
 }
 
-export function makeEmployeeRepo(db : Db) : EmployeeRepo{
+export function makeEmployeeRepoPG(db : Db) : EmployeeRepo{
     const getAllEmployees = async () => {
             const {rows} = await db.query('SELECT * FROM employee'); 
             return rows;
@@ -17,37 +17,44 @@ export function makeEmployeeRepo(db : Db) : EmployeeRepo{
     const getEmployeeById = async (id : number) => {
         const {rows} = await db.query(`
             SELECT * FROM employee 
-            WHERE id = ?`, [id]);
+            WHERE id = $1`, [id]);
         return rows[0];
     };
     const createEmployee = async (newEmployee : CreateEmployeeDTO) =>{
-        const { insertId } = await db.execute(`
+        const {rows} = await db.execute(`
             INSERT INTO employee (name, email, phone, role) 
-            VALUES (?, ?, ?, ?)`, 
+            VALUES ($1, $2, $3, $4)
+            RETURNING id`, 
             [newEmployee.name, newEmployee.email, newEmployee.phone, newEmployee.role]);
-
-        const {rows : insertedRows} = await db.query('SELECT * FROM employee WHERE id = ?', [insertId]);
+        
+        if (!rows || rows[0] === null) {
+            throw new Error('No se pudo insertar')
+        }
+        const {rows : insertedRows} = await db.query('SELECT * FROM employee WHERE id = $1', [rows[0].id]);
         return insertedRows[0];
     };
+    
     const updateEmployee = async (id:number, updateData : UpdateEmployeeDTO) => {
         const params : string[] = [];
         const insertQuery : string[] = [];
+        let count = 1;
         Object.entries(updateData).forEach(([key, value]) => {
             if(value === undefined) return; 
             params.push(value);
-            insertQuery.push(" " + key + " = ?") 
+            insertQuery.push(" " + key + ` = $${count}`) 
+            count++;
         })
 
         const {affectedCount} = await db.execute(`UPDATE employee
             SET ${insertQuery.join(', ')}
-            WHERE id = ?`, [...params, id]);
+            WHERE id = $1`, [...params, id]);
 
         return affectedCount == 0 ? null : await getEmployeeById(id); 
     };
     const deleteEmployee = async (id : number) => {
         const {affectedCount} = await db.execute(`
             DELETE FROM employee 
-            WHERE id = ? `, 
+            WHERE id = $1`, 
             [id]);
 
         return affectedCount;

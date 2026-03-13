@@ -1,6 +1,5 @@
 import type { EmployeeService } from "./employee.service.js";
-import type { CreateEmployeeDTO, Employee, UpdateEmployeeDTO } from "./employee.types.js";
-import type { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
 import {z} from 'zod';
 
 export type EmployeeController = {
@@ -29,10 +28,6 @@ export function makeEmployeeController(employeeService : EmployeeService) : Empl
     return {
         getAllEmployees : async (req : Request, res: Response) => {
             const employees = await employeeService.getAllEmployees();
-            if (employees.length == 0){
-                res.status(404).send({message : 'No employees found'})
-                return;
-            }
             res.status(200).send(employees)
         },
         getEmployeeById : async (req : Request, res: Response) => {
@@ -77,6 +72,11 @@ export function makeEmployeeController(employeeService : EmployeeService) : Empl
                     return;
                 }
                 const employeeData = updateEmployeeSchema.parse(req.body)
+                console.log(employeeData)                
+                if (!employeeData){
+                    res.status(400).send({message: 'Invalid employee data'})
+                    return;
+                }
                 const updateEmployee = await employeeService.updateEmployee(parseInt(req.params.id), employeeData)
                 res.status(200).send({message: 'Employee updated successfully', employee: updateEmployee});
             } catch (error) {

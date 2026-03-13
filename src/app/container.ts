@@ -1,4 +1,4 @@
-import { createDb } from "../infra/db/db.js";
+import { createDb, createDbPG } from "../infra/db/db.js";
 
 import { makeCountryRepo } from "../modules/country/country.repo.js";
 import { makeCountryService } from "../modules/country/country.service.js";
@@ -10,9 +10,16 @@ import { makeEmployeeService } from "../modules/employee/employee.service.js";
 import { makeEmployeeController } from "../modules/employee/employee.controller.js";
 import { makeEmployeeRouter } from "../modules/employee/employee.routes.js";
 
+import { makeEmployeeRepoPG } from "../modules/employee/employee.repoPG.js";
+
+
 export function buildContainer(){
     const db = createDb();
+    const dbPG = createDbPG();
+
     db.testConnection();
+    dbPG.testConnection();
+
 
     const countryRepo = makeCountryRepo(db);
     const countryService = makeCountryService(countryRepo);
@@ -24,6 +31,11 @@ export function buildContainer(){
     const employeeController = makeEmployeeController(employeeService);
     const employeeRouter = makeEmployeeRouter(employeeController);
 
-    return { countryRouter , employeeRouter };
+    const employeeRepoPG = makeEmployeeRepoPG(dbPG);
+    const employeeServicePG = makeEmployeeService(employeeRepoPG);
+    const employeeControllerPG = makeEmployeeController(employeeServicePG);
+    const employeeRouterPG = makeEmployeeRouter(employeeControllerPG);
+
+    return { countryRouter , employeeRouter, employeeRouterPG};
 };
 

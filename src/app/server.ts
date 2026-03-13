@@ -6,14 +6,16 @@ import { config } from '../config/env.js';
 
 const app = express();
 
-const { countryRouter, employeeRouter } = buildContainer();
+const { countryRouter, employeeRouter, employeeRouterPG } = buildContainer();
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Rutas
 app.use('/api/countries', countryRouter.router);
-app.use('/api/employees', employeeRouter.router);
+app.use('/api/employees/MYSQL', employeeRouter.router);
+
+app.use('/api/employees/PG', employeeRouterPG.router);
 
 // Ruta de inicio
 app.get('/', (req: Request, res: Response) => {
